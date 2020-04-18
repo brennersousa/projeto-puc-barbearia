@@ -1,0 +1,5 @@
+// para criar banco de dados
+vendor/bin/doctrine orm:schema-tool:create
+
+// para atualizar banco de dados
+vendor/bin/doctrine orm:schema-tool:update
