@@ -4,11 +4,12 @@ namespace App\Controllers;
 
 use App\Models\Client;
 use App\Models\Person;
+use App\Models\Receptionist;
 use App\Models\Role;
 use CoffeeCode\Router\Router;
 use App\Support\Upload;
 
-class ClientController extends ControllerBase
+class ReceptionistController extends ControllerBase
 {
     public function __construct(Router $router)
     {
@@ -21,6 +22,20 @@ class ClientController extends ControllerBase
         $lastName  = filter_var($this->getParam('lastName'), FILTER_DEFAULT);
         $email     = filter_var($this->getParam('email'), FILTER_VALIDATE_EMAIL);
         $password  = filter_var($this->getParam('password'), FILTER_DEFAULT);
+
+        // user is not logged in
+        if(!$this->session->has('person')){
+            $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
+            echo json_encode($json);
+            return;
+        }
+
+        // user not autorization
+        if($this->session->loggedUserRole != Role::ROLE_ADMINISTRATOR){
+            $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
+            echo json_encode($json);
+            return;
+        }
 
         $person = new Person();
         
@@ -40,25 +55,63 @@ class ClientController extends ControllerBase
             }
         }else{
             $person = $result;
-            if($person->isClient()){
-                $json = ['success' => false, 'message' => "Já existe um cliente cadastrado com esse e-mail"];
+            if($person->isReceptionist()){
+                $json = ['success' => false, 'message' => "Já existe um recepcionista registrado com esse e-mail"];
                 echo json_encode($json);
                 return;
             }
         }
 
-        $client = new Client();
-        $client->setPerson($person);
+        $receptionist = new Receptionist();
+        $receptionist->setPerson($person);
+        $receptionist->setStatus(Role::STATUS_ACTIVE);
         
-        if(!$client->save())
+        if(!$receptionist->save())
         {
             $json = ['success' => false, 'message' => "Opss, algum erro aconteceu. Tente novamente mais tarde"];
             echo json_encode($json);
             return;
         }
 
-        $json = ['success' => true, "message" => "Cadastro realizado com sucesso", 'id' => $client->getId()];
+        $json = ['success' => true, "message" => "Cadastro realizado com sucesso", 'id' => $receptionist->getId()];
         echo json_encode($json);
+    }
+
+       
+    public function getAllReceptionist()
+    {
+        // user is not logged in
+        if(!$this->session->has('person')){
+            $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
+            echo json_encode($json);
+            return;
+        }
+
+        // user not autorization
+        if($this->session->loggedUserRole != Role::ROLE_ADMINISTRATOR){
+            $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
+            echo json_encode($json);
+            return;
+        }
+
+        $receptionistWk = new Receptionist();
+        $result = $receptionistWk->fetchAll();
+
+        $receptionists = [];
+        if(count($result) > 0){
+            foreach($result as $receptionist){
+                $receptionists[] = [
+                    'firstName' => $receptionist->getPerson()->getFirstName(),
+                    'lastName'  => $receptionist->getPerson()->getLastName(),
+                    'email'     => $receptionist->getPerson()->getEmail(),
+                    'photo'     => $receptionist->getPerson()->getPhoto(),
+                    'status'    => $receptionist->getStatus(),
+                    'id'        => $receptionist->getId()
+                ];
+            }
+        }
+
+        echo json_encode($receptionists);
     }
 
     public function update()
@@ -71,31 +124,31 @@ class ClientController extends ControllerBase
         $photo     = $this->getFile('photo');
 
         // user is not logged in
-        if(!$this->session->has('person')){
+        if(!$this->session->has('person') || $this->session->loggedUserRole == Role::ROLE_CLIENT){
             $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
             echo json_encode($json);
             return;
         }
 
         // user not autorization
-        if($this->session->loggedUserRole == Role::ROLE_CLIENT && $this->session->clientId != $id){
+        if($this->session->loggedUserRole == Role::ROLE_RECEPTIONIST && $this->session->receptionistId != $id){
             $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
             echo json_encode($json);
             return;
         }
 
-        $client = new Client();
+        $receptionist = new Receptionist();
 
-        $client = $client->fetchById($id);
-
-        if(!$client)
+        $receptionist = $receptionist->fetchById($id);
+      
+        if(!$receptionist)
         {
-            $json = ['success' => false, "message" => "Cliente informado é inválido"];
+            $json = ['success' => false, "message" => "usuário informado é inválido"];
             echo json_encode($json);
             return;
         }
 
-        $person = $client->getPerson();
+        $person = $receptionist->getPerson();
         $person->setFirstName($firstName);
         $person->setLastName($lastName);
         $person->setEmail($email);
@@ -129,53 +182,19 @@ class ClientController extends ControllerBase
             $upload->remove($oldImagePath);
         }
         
-        $json = ['success' => true, "message" => "cliente atualizado com sucesso"];
+        $json = ['success' => true, "message" => "usuário atualizado com sucesso"];
         echo json_encode($json);
-    }
-    
-    public function getAllClients()
-    {
-        // user is not logged in
-        if(!$this->session->has('person')){
-            $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
-            echo json_encode($json);
-            return;
-        }
-
-        // user not autorization
-        if($this->session->loggedUserRole == Role::ROLE_CLIENT){
-            $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
-            echo json_encode($json);
-            return;
-        }
-
-        $clientWk = new Client();
-        $result = $clientWk->fetchAll();
-
-        $clients = [];
-        if(count($result) > 0){
-            foreach($result as $client){
-                $clients[] = [
-                    'firstName' => $client->getPerson()->getFirstName(),
-                    'lastName'  => $client->getPerson()->getLastName(),
-                    'email'     => $client->getPerson()->getEmail(),
-                    'photo'     => $client->getPerson()->getPhoto(),
-                    'id'        => $client->getId()
-                ];
-            }
-        }
-
-        echo json_encode($clients);
     }
 
     public function remove($request)
     {
-        $id = $request['id'] ?? null;
+        
+        $id =  $id = $request['id'] ?? null;
+        
+        $receptionist = new Receptionist();
 
-        $client = new Client();
-
-        $client = $client->fetchById($id);
-
+        $receptionist = $receptionist->fetchById($id);
+        
         // user is not logged in
         if(!$this->session->has('person')){
             $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
@@ -184,26 +203,40 @@ class ClientController extends ControllerBase
         }
 
         // user not autorization
-        if($this->session->loggedUserRole == Role::ROLE_CLIENT){
+        if($this->session->loggedUserRole != Role::ROLE_ADMINISTRATOR){
             $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
             echo json_encode($json);
             return;
         }
    
-        if(!$client)
+        if(!$receptionist)
         {
-           $json = ['success' => false, "message" => "Cliente informado é inválido"];
+           $json = ['success' => false, "message" => "Usuário informado é inválido"];
            echo json_encode($json);
            return;
         }
 
-        if(!$client->remove()){
-            $json = ['success' => false, "message" => $client->getError()];
+        if($receptionist->hasScheduling()){
+           $receptionist->setStatus(Role::STATUS_INACTIVE);
+
+            if(!$receptionist->save()){
+                $json = ['success' => false, "message" => $receptionist->getError()];
+                echo json_encode($json);
+                return;
+            }
+
+            $json = ['success' => false, "message" => "Usuário desativado do sistema"];
+            echo json_encode($json);
+            return;
+        }
+      
+        if(!$receptionist->remove()){
+            $json = ['success' => false, "message" => $receptionist->getError()];
             echo json_encode($json);
             return;
         }
 
-        $json = ['success' => true, "message" => "o cliente foi removido do sistema"];
+        $json = ['success' => true, "message" => "Usuário foi removido do sistema"];
         echo json_encode($json);
     }
 }

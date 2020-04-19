@@ -14,9 +14,6 @@ use DateTime;
 /** @MappedSuperclass */
 class Model_Barber extends Model_Base
 {
-    const STATUS_ACTIVE   = 1;
-    const STATUS_INACTIVE = 2;
-
     /**
      * @Id
      * @Column(type="integer", name="id")

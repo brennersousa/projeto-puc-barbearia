@@ -1,6 +1,8 @@
 <?php
 namespace App\Entities;
 
+use App\Models\Person;
+use App\Models\Role;
 use DateTime;
 
 /** @MappedSuperclass */
@@ -73,6 +75,15 @@ class Model_Receptionist extends Model_Base
      */ 
     public function setPerson($person)
     {
+        if(!$this->getId())
+        {
+            $role = new Role();
+            $role->setPerson($person);
+            $role->setRole(Role::ROLE_RECEPTIONIST);
+            $role->save($role);
+            // $person->getRoles()->add($role);
+        }
+
         $this->person = $person;
     }
 
@@ -81,6 +92,23 @@ class Model_Receptionist extends Model_Base
      */ 
     public function setStatus($status)
     {
+        if($this->getId())
+        {
+            if($status == Role::STATUS_ACTIVE){
+                if(!$this->getPerson()->isReceptionist()){
+                    $role = new Role();
+                    $role->setPerson($this->getPerson());
+                    $role->setRole(Role::ROLE_RECEPTIONIST);
+                    $role->save($role);
+                    // $this->getPerson()->getRoles()->add($role);
+                }
+            }elseif($status == Role::STATUS_INACTIVE){
+                if($this->getPerson()->isReceptionist()){
+                   $this->getPerson()->removeRole(Role::ROLE_RECEPTIONIST);
+                }
+            }
+        }
+
         $this->status = $status;
     }
 

@@ -18,6 +18,9 @@ class Model_Role extends Model_Base
     const ROLE_RECEPTIONIST  = 3;
     const ROLE_ADMINISTRATOR = 4;
 
+    const STATUS_ACTIVE   = 1;
+    const STATUS_INACTIVE = 2;
+
     /**
      * @Id
      * @Column(type="integer", name="id")

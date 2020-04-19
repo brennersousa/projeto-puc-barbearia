@@ -18,6 +18,11 @@ $router->post("/atualizar/cliente", "ClientController@update");
 $router->get("/clientes", "ClientController@getAllClients");
 $router->get("/cliente/{id}/remove", "ClientController@remove");
 
+$router->post("/cadastrar/recepcionista", "ReceptionistController@register");
+$router->get("/recepcionistas", "ReceptionistController@getAllReceptionist");
+$router->post("/atualizar/recepcionista", "ReceptionistController@update");
+$router->get("/recepcionista/{id}/remove", "ReceptionistController@remove");
+
 $router->get("/error/{error}", "TesteController@error");
 /**
  * This method executes the routes
