@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\Client;
 use App\Models\Person;
+use App\Models\Role;
 use CoffeeCode\Router\Router;
 use App\Support\Upload;
 
@@ -69,6 +70,20 @@ class ClientController extends ControllerBase
         $password  = filter_var($this->getParam('password'), FILTER_DEFAULT);
         $photo     = $this->getFile('photo');
 
+        // user is not logged in
+        if(!$this->session->has('person')){
+            $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
+            echo json_encode($json);
+            return;
+        }
+
+        // user not autorization
+        if($this->session->loggedUserRole == Role::ROLE_CLIENT && $this->session->clientId != $id){
+            $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
+            echo json_encode($json);
+            return;
+        }
+
         $client = new Client();
 
         $client = $client->fetchById($id);
@@ -95,14 +110,13 @@ class ClientController extends ControllerBase
                 echo json_encode($json);
                 return;
             }
+            $oldImagePath = $person->getPhoto();
             $person->setPhoto($imagePath);
         }
 
-
-    
         if(!$person->save())
         {
-            if($imagePath){
+            if(!empty($imagePath)){
                 $upload->remove($imagePath);
             }
 
@@ -111,12 +125,30 @@ class ClientController extends ControllerBase
             return;
         }
 
+        if(!empty($oldImagePath)){
+            $upload->remove($oldImagePath);
+        }
+        
         $json = ['success' => true, "message" => "cliente atualizado com sucesso"];
         echo json_encode($json);
     }
     
     public function getAllClients()
     {
+        // user is not logged in
+        if(!$this->session->has('person')){
+            $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
+            echo json_encode($json);
+            return;
+        }
+
+        // user not autorization
+        if($this->session->loggedUserRole == Role::ROLE_CLIENT){
+            $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
+            echo json_encode($json);
+            return;
+        }
+
         $clientWk = new Client();
         $result = $clientWk->fetchAll();
 
@@ -143,6 +175,20 @@ class ClientController extends ControllerBase
         $client = new Client();
 
         $client = $client->fetchById($id);
+
+        // user is not logged in
+        if(!$this->session->has('person')){
+            $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
+            echo json_encode($json);
+            return;
+        }
+
+        // user not autorization
+        if($this->session->loggedUserRole == Role::ROLE_CLIENT){
+            $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
+            echo json_encode($json);
+            return;
+        }
    
         if(!$client)
         {

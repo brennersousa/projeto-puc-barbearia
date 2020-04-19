@@ -31,6 +31,22 @@ class Person extends Model_Person
     }
 
     /**
+     * @return boolean
+     */
+    public function isAdmin()
+    {
+      return $this->hasRole(Role::ROLE_ADMINISTRATOR);
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isReceptionist()
+    {
+      return $this->hasRole(Role::ROLE_RECEPTIONIST);
+    }
+
+    /**
      * @param int $role
      * @return boolean
      */
@@ -45,6 +61,53 @@ class Person extends Model_Person
             }
         }
         return false;
+    }
+
+    public function getLoggedUserRole()
+    {
+        if($this->isAdmin()){
+            return Role::ROLE_ADMINISTRATOR;
+        }
+
+        if($this->isReceptionist()){
+            return Role::ROLE_RECEPTIONIST;
+        }
+
+        if($this->isClient()){
+            return Role::ROLE_CLIENT;
+        }
+
+        return null;
+    }
+
+    public function getClientObject()
+    {
+        return $this->getClientByPersonId($this->getId());
+    }
+
+    public function getClientByPersonId($id)
+    {
+        return $this->getEntityManager()->getRepository(Client::class)->findOneBy(['person' => $id]);
+    }
+
+    public function getReceptionistObject()
+    {
+        return $this->getReceptionistByPersonId($this->getId());
+    }
+
+    public function getReceptionistByPersonId($id)
+    {
+        return $this->getEntityManager()->getRepository(Receptionist::class)->findOneBy(['person' => $id]);
+    }
+
+    public function getAdministratorObject()
+    {
+        return $this->getAdministratorByPersonId($this->getId());
+    }
+
+    public function getAdministratorByPersonId($id)
+    {
+        return $this->getEntityManager()->getRepository(Administrator::class)->findOneBy(['person' => $id]);
     }
 
     public function save($showError = false)

@@ -148,10 +148,6 @@ class Model_Person extends Model_Base
      */ 
     public function setPhoto($photo)
     {
-        if($this->getPhoto()){
-            $upload = new Upload();
-            $upload->remove($this->getPhoto());
-        }
         $this->photo = $photo;
     }
 
