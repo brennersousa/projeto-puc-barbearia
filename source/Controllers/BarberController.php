@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\Barber;
 use App\Models\Client;
 use App\Models\Person;
 use App\Models\Receptionist;
@@ -9,7 +10,7 @@ use App\Models\Role;
 use CoffeeCode\Router\Router;
 use App\Support\Upload;
 
-class ReceptionistController extends ControllerBase
+class BarberController extends ControllerBase
 {
     public function __construct(Router $router)
     {
@@ -55,30 +56,30 @@ class ReceptionistController extends ControllerBase
             }
         }else{
             $person = $result;
-            if($person->isReceptionist()){
-                $json = ['success' => false, 'message' => "Já existe um recepcionista registrado com esse e-mail"];
+            if($person->isBarber()){
+                $json = ['success' => false, 'message' => "Já existe um barbeiro registrado com esse e-mail"];
                 echo json_encode($json);
                 return;
             }
         }
 
-        $receptionist = new Receptionist();
-        $receptionist->setPerson($person);
-        $receptionist->setStatus(Role::STATUS_ACTIVE);
+        $barber = new Barber();
+        $barber->setPerson($person);
+        $barber->setStatus(Role::STATUS_ACTIVE);
         
-        if(!$receptionist->save())
+        if(!$barber->save())
         {
             $json = ['success' => false, 'message' => "Opss, algum erro aconteceu. Tente novamente mais tarde"];
             echo json_encode($json);
             return;
         }
 
-        $json = ['success' => true, "message" => "Cadastro realizado com sucesso", 'id' => $receptionist->getId()];
+        $json = ['success' => true, "message" => "Cadastro realizado com sucesso", 'id' => $barber->getId()];
         echo json_encode($json);
     }
 
        
-    public function getAllReceptionist()
+    public function getAllBarbers()
     {
         // user is not logged in
         if(!$this->session->has('person')){
@@ -88,31 +89,31 @@ class ReceptionistController extends ControllerBase
         }
 
         // user not autorization
-        if($this->session->loggedUserRole != Role::ROLE_ADMINISTRATOR){
+        if($this->session->loggedUserRole != Role::ROLE_ADMINISTRATOR && $this->session->loggedUserRole != Role::ROLE_RECEPTIONIST){
             $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
             echo json_encode($json);
             return;
         }
 
-        $receptionistWk = new Receptionist();
-        $result = $receptionistWk->fetchAll();
+        $barberWk = new Barber();
+        $result = $barberWk->fetchAll();
 
-        $receptionists = [];
+        $barbers = [];
         if(count($result) > 0){
-            foreach($result as $receptionist){
-                $photo = ($receptionist->getPerson()->getPhoto() ? url($receptionist->getPerson()->getPhoto()) : null);
-                $receptionists[] = [
-                    'firstName' => $receptionist->getPerson()->getFirstName(),
-                    'lastName'  => $receptionist->getPerson()->getLastName(),
-                    'email'     => $receptionist->getPerson()->getEmail(),
+            foreach($result as $barber){
+                $photo = ($barber->getPerson()->getPhoto() ? url($barber->getPerson()->getPhoto()) : null);
+                $barbers[] = [
+                    'firstName' => $barber->getPerson()->getFirstName(),
+                    'lastName'  => $barber->getPerson()->getLastName(),
+                    'email'     => $barber->getPerson()->getEmail(),
                     'photo'     => $photo,
-                    'status'    => $receptionist->getStatus(),
-                    'id'        => $receptionist->getId()
+                    'status'    => $barber->getStatus(),
+                    'id'        => $barber->getId()
                 ];
             }
         }
-
-        echo json_encode($receptionists);
+     
+        echo json_encode($barbers);
     }
 
     public function update()
@@ -132,24 +133,24 @@ class ReceptionistController extends ControllerBase
         }
 
         // user not autorization
-        if($this->session->loggedUserRole == Role::ROLE_RECEPTIONIST && $this->session->receptionistId != $id){
+        if($this->session->loggedUserRole != Role::ROLE_ADMINISTRATOR){
             $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
             echo json_encode($json);
             return;
         }
 
-        $receptionist = new Receptionist();
+        $barber = new Barber();
 
-        $receptionist = $receptionist->fetchById($id);
+        $barber = $barber->fetchById($id);
       
-        if(!$receptionist)
+        if(!$barber)
         {
             $json = ['success' => false, "message" => "usuário informado é inválido"];
             echo json_encode($json);
             return;
         }
 
-        $person = $receptionist->getPerson();
+        $person = $barber->getPerson();
         $person->setFirstName($firstName);
         $person->setLastName($lastName);
         $person->setEmail($email);
@@ -192,10 +193,6 @@ class ReceptionistController extends ControllerBase
         
         $id =  $id = $request['id'] ?? null;
         
-        $receptionist = new Receptionist();
-
-        $receptionist = $receptionist->fetchById($id);
-        
         // user is not logged in
         if(!$this->session->has('person')){
             $json = ['success' => false, "message" => "Você não possui autorização para realizar essa ação"];
@@ -209,19 +206,24 @@ class ReceptionistController extends ControllerBase
             echo json_encode($json);
             return;
         }
+
+        $barber = new Barber();
+
+        $barber = $barber->fetchById($id);
+        
    
-        if(!$receptionist)
+        if(!$barber)
         {
            $json = ['success' => false, "message" => "Usuário informado é inválido"];
            echo json_encode($json);
            return;
         }
 
-        if($receptionist->hasScheduling()){
-           $receptionist->setStatus(Role::STATUS_INACTIVE);
+        if($barber->hasScheduling()){
+           $barber->setStatus(Role::STATUS_INACTIVE);
 
-            if(!$receptionist->save()){
-                $json = ['success' => false, "message" => $receptionist->getError()];
+            if(!$barber->save()){
+                $json = ['success' => false, "message" => $barber->getError()];
                 echo json_encode($json);
                 return;
             }
@@ -231,8 +233,8 @@ class ReceptionistController extends ControllerBase
             return;
         }
       
-        if(!$receptionist->remove()){
-            $json = ['success' => false, "message" => $receptionist->getError()];
+        if(!$barber->remove()){
+            $json = ['success' => false, "message" => $barber->getError()];
             echo json_encode($json);
             return;
         }

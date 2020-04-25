@@ -23,6 +23,12 @@ class Model_Service extends Model_Base
     /** @Column(type="string", name="name", length=65) */
     private $name;
 
+     /** @Column(type="integer", name="value") */
+     private $value;
+
+     /** @Column(type="integer", name="status") */
+     private $status;
+
     /** @Column(type="datetime", name="created_at") */
     private $createdAt;
 

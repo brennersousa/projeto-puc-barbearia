@@ -23,6 +23,11 @@ $router->get("/recepcionistas", "ReceptionistController@getAllReceptionist");
 $router->post("/atualizar/recepcionista", "ReceptionistController@update");
 $router->get("/recepcionista/{id}/remove", "ReceptionistController@remove");
 
+$router->post("/cadastrar/barbeiro", "BarberController@register");
+$router->get("/barbeiros", "BarberController@getAllBarbers");
+$router->post("/atualizar/barbeiro", "BarberController@update");
+$router->get("/barbeiro/{id}/remove", "BarberController@remove");
+
 $router->get("/error/{error}", "TesteController@error");
 /**
  * This method executes the routes

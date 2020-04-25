@@ -57,6 +57,9 @@ class Model_Scheduling extends Model_Base
      */
     private $services;
 
+    /** @Column(type="integer", name="status") */
+    private $status;
+
     /** @Column(type="datetime", name="created_at") */
     private $createdAt;
 

@@ -9,6 +9,7 @@
 namespace App\Entities;
 
 use App\Models\Person;
+use App\Models\Role;
 use DateTime;
 
 /** @MappedSuperclass */
@@ -89,6 +90,14 @@ class Model_Barber extends Model_Base
      */
     public function setPerson(Person $person): void
     {
+        if(!$this->getId())
+        {
+            $role = new Role();
+            $role->setPerson($person);
+            $role->setRole(Role::ROLE_BARBER);
+            $role->save($role);
+        }
+
         $this->person = $person;
     }
 
@@ -97,6 +106,22 @@ class Model_Barber extends Model_Base
      */ 
     public function setStatus($status)
     {
+        if($this->getId())
+        {
+            if($status == Role::STATUS_ACTIVE){
+                if(!$this->getPerson()->isBarber()){
+                    $role = new Role();
+                    $role->setPerson($this->getPerson());
+                    $role->setRole(Role::ROLE_BARBER);
+                    $role->save($role);
+                }
+            }elseif($status == Role::STATUS_INACTIVE){
+                if($this->getPerson()->isBarber()){
+                   $this->getPerson()->removeRole(Role::ROLE_BARBER);
+                }
+            }
+        }
+
         $this->status = $status;
     }
 

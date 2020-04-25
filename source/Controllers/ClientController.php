@@ -155,11 +155,12 @@ class ClientController extends ControllerBase
         $clients = [];
         if(count($result) > 0){
             foreach($result as $client){
+                $photo = ($client->getPerson()->getPhoto() ? url($client->getPerson()->getPhoto()) : null);
                 $clients[] = [
                     'firstName' => $client->getPerson()->getFirstName(),
                     'lastName'  => $client->getPerson()->getLastName(),
                     'email'     => $client->getPerson()->getEmail(),
-                    'photo'     => $client->getPerson()->getPhoto(),
+                    'photo'     => $photo,
                     'id'        => $client->getId()
                 ];
             }

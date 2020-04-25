@@ -3,6 +3,7 @@ namespace App\Models;
 
 use App\Entities\Model_Person;
 use App\Support\EntityManager;
+use App\Support\Upload;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
@@ -45,6 +46,14 @@ class Person extends Model_Person
     {
       return $this->hasRole(Role::ROLE_RECEPTIONIST);
     }
+
+    /*
+     * @return boolean
+     */
+   public function isBarber()
+   {
+     return $this->hasRole(Role::ROLE_BARBER);
+   }
 
     /**
      * @param int $role
@@ -160,7 +169,15 @@ class Person extends Model_Person
             return false; 
         }
 
-        return parent::remove($showError);
+        $image = $this->getPhoto();
+        $result = parent::remove($showError);
+
+        if($result && $image){
+            $upload = new Upload();
+            $upload->remove($image);
+        }
+
+        return $result;
     }
 
     public function removeRole($role)

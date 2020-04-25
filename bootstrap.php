@@ -6,10 +6,6 @@ use Doctrine\ORM\EntityManager;
 // bootstrap.php
 require_once "vendor/autoload.php";
 
-// load configurations .env
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__); 
-$dotenv->load();
-
 // doctrine configurations 
 
 $paths = array("source/Models");
